@@ -1,25 +1,30 @@
-import PIL.ImageGrab
-import time, mediapipe, cv2
+import time, cv2, os, mediapipe, tensorflow
 import HandTracker as ht
 import math
 import pyautogui
-import PIL
 import uuid
 
+
+os.system("amixer -D pulse sset Master 10%+")
+
+pyautogui.FAILSAFE = False
 
 def takeScreenshot():
     unique_id = uuid.uuid4()
     screenshot = pyautogui.screenshot()
     screenshot.save(f"/home/talha/Pictures/Screenshot_{unique_id}.png")
-    time.sleep(2)
 
 
 pTime = 0
 cTime = 0
 cap = cv2.VideoCapture(0)
-detector = ht.HandDetector(detectionCon=0.7,trackingCon=0.7)
+
+
+detector = ht.HandDetector(detectionCon=0.3,trackingCon=0.3)
 while True:
     success, img = cap.read()
+
+    img = cv2.flip(img, 1)
 
     img = detector.findHands(img)
     position = detector.findPos(img)
@@ -35,13 +40,13 @@ while True:
         cv2.circle(img,(icx,icy),15,color=(255,0,255),thickness=cv2.FILLED)
         cv2.circle(img,(tcx,tcy),15,color=(255,0,255),thickness=cv2.FILLED)
         cv2.circle(img,(mcx, mcy),15,color=(255,0,255),thickness=cv2.FILLED)
-        if length < 17:
-            takeScreenshot()
+        if length > 70:
+            pyautogui.moveTo((icx, icy))
+            posx, posy = icx, icy
+        if length < 16:
+            pyautogui.click(posx, posy)
 
         cv2.line(img, (icx, icy), (tcx, tcy), color=(255,255,0), thickness=5)
-
-
-
 
     cTime = time.time()
     fps = 1/(cTime - pTime)
